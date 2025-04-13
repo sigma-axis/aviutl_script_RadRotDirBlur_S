@@ -112,8 +112,32 @@ AviUtl メインウィンドウのアンカー操作でも指定できます．
 }
 ```
 
+##  他スクリプトから利用する場合
 
-## TIPS
+このぼかし効果を他スクリプトから利用できます．`RadRotDirBlur_S.lua` を利用する側のスクリプトが見つけられるようにして置いた上で，以下のようにして適用できます．
+
+```lua
+local RadRotDirBlur_S = require "RadRotDirBlur_S";
+RadRotDirBlur_S.RadRotDirBlur_S(radial_rate, rotate_rad, direction_x, direction_y, center_x, center_y, relative_pos, quality, keep_size, reload);
+```
+
+`.RadRotDirBlur_S()` 関数のパラメタは以下の通りです:
+
+|パラメタ|名前|型|説明|
+|---:|:---:|:---:|:---|
+|\#1|`radial_rate`|number| 拡大率，等倍は `1.0`. 放射ブラーに対応する部分．|
+|\#2|`rotate_rad`|number| 回転角，ラジアン単位．回転ブラーに対応する部分．|
+|\#3|`direction_x`|number| X 座標の移動量，ピクセル単位．方向ブラーに対応する部分．|
+|\#4|`direction_y`|number| Y 座標の移動量，ピクセル単位．方向ブラーに対応する部分．|
+|\#5|`center_x`|number| 拡大や回転の中心の X 座標，ピクセル単位，画像の中央が原点．|
+|\#6|`center_y`|number| 拡大や回転の中心の Y 座標，ピクセル単位，画像の中央が原点．|
+|\#7|`relative_pos`|number| ぼかし処理の基準位置，`0` で両端から伸びるように，`1.0` や `-1.0` で片側から伸びるようにぼかしがかかる．範囲は `-1.0` から `1.0`.|
+|\#8|`quality`|integer| 1ピクセルを計算するのに利用されるピクセル数．最小は `2`.|
+|\#9|`keep_size`|boolean| サイズ固定をするかどうかを指定．|
+|\#10|`reload`|boolean\|nil| GLShaderKit に対してシェーダーファイルの再読み込みを促す．デバッグ用．省略時は `false` と同等．|
+
+
+##  TIPS
 
 1.  [`拡大率`](#拡大率) と [`回転角`](#拡大率) を同時に指定すると螺旋ブラーになります．
 
