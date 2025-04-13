@@ -2,7 +2,7 @@
 
 放射ブラー (radial blur), 回転ブラー (rotation blur), 方向ブラー (directional blur) の 3 つを複合したぼかし効果を適用する AviUtl スクリプトです．
 
-[ダウンロードはこちら．](https://github.com/sigma-axis/aviutl_RadRotDirBlur_S/releases) [紹介動画．](https://www.nicovideo.jp/watch/sm44874159)
+[ダウンロードはこちら．](https://github.com/sigma-axis/aviutl_script_RadRotDirBlur_S/releases) [紹介動画．](https://www.nicovideo.jp/watch/sm44874159)
 
 ![放射ブラーと回転ブラー，方向ブラー](https://github.com/user-attachments/assets/471485a6-92a2-4f0b-a71c-381577beef54)
 
