@@ -1,0 +1,72 @@
+--[[
+MIT License
+Copyright (c) 2025 sigma-axis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+https://mit-license.org/
+]]
+
+--
+-- VERSION: v1.00
+--
+
+--track0:拡大率,1,1000,120,0.01
+--track1:回転角,-720,720,30,0.01
+--track2:強さ,-200,200,100,0.01
+--track3:相対位置,-100,100,0,0.01
+--check0:サイズ固定,0
+--dialog:移動方向,_1={100,100};中心,_2={0,0};精度,_3=512;PI,_0=nil;
+local obj, tonumber, math = obj, tonumber, math;
+
+-- take parameters.
+obj.setanchor("_2", 1);
+obj.setanchor("_1", 1, "star");
+local rad, rot, amount, rel_pos, keep_size, dx, dy, cx, cy, quality = obj.track0, obj.track1, obj.track2, obj.track3, obj.check0, tonumber(_1[1]) or 0, tonumber(_1[2]) or 0, tonumber(_2[1]) or 0, tonumber(_2[2]) or 0, tonumber(_3) or 512;
+_1 = nil; _2 = nil; _3 = nil;
+if _0 then
+	local c0, t0, t1, t2, t3 = _0[0], _0[1], _0[2], _0[3], _0[4]; _0 = nil;
+	if type(c0) == "boolean" then keep_size = c0;
+	elseif type(c0) == "number" then keep_size = c0 ~= 0 end
+	rad = tonumber(t0) or rad;
+	rot = tonumber(t1) or rot;
+	amount = tonumber(t2) or amount;
+	rel_pos = tonumber(t3) or rel_pos;
+end
+
+-- normalize paramters.
+rad = math.max(rad / 100, 0.01);
+rot = rot * math.pi / 180;
+amount = amount / 100;
+rel_pos = math.min(math.max(rel_pos / 100, -1), 1);
+quality = math.min(math.max(quality, 2), 4096);
+cx = cx - obj.ox + obj.cx - (obj.getvalue("cx") or 0);
+cy = cy - obj.oy + obj.cy - (obj.getvalue("cy") or 0);
+
+-- ignore trivial cases.
+if amount == 0 or (rad == 1 and rot == 0 and dx == 0 and dy == 0) then return end
+
+-- apply `amount`
+rad = rad ^ amount;
+rot = rot * amount;
+dx = dx * amount;
+dy = dy * amount;
+
+local RadRotDirBlur_S = require "RadRotDirBlur_S";
+RadRotDirBlur_S.RadRotDirBlur_S(rad, rot, dx, dy, cx, cy, rel_pos, quality, keep_size);
