@@ -123,20 +123,87 @@ local RadRotDirBlur_S = require "RadRotDirBlur_S";
 RadRotDirBlur_S.RadRotDirBlur_S(radial_rate, rotate_rad, direction_x, direction_y, center_x, center_y, relative_pos, quality, keep_size, reload);
 ```
 
-`.RadRotDirBlur_S()` 関数のパラメタは以下の通りです:
+メインとなる `.RadRotDirBlur_S()` 関数に加えていくつか関数を出力しています．
 
-|パラメタ|名前|型|説明|
+### `.RadRotDirBlur_S()` 関数
+
+放射・回転・方向の複合ブラーを適用．必要なら画像サイズを領域拡張する．
+
+|引数・戻り値|名前|型|説明|
 |---:|:---:|:---:|:---|
-|\#1|`radial_rate`|number| 拡大率，正数で指定，等倍は `1.0`. 放射ブラーに対応する部分．|
-|\#2|`rotate_rad`|number| 回転角，ラジアン単位．回転ブラーに対応する部分．|
-|\#3|`direction_x`|number| X 座標の移動量，ピクセル単位．方向ブラーに対応する部分．|
-|\#4|`direction_y`|number| Y 座標の移動量，ピクセル単位．方向ブラーに対応する部分．|
-|\#5|`center_x`|number| 拡大や回転の中心の X 座標，ピクセル単位，画像の中央が原点．|
-|\#6|`center_y`|number| 拡大や回転の中心の Y 座標，ピクセル単位，画像の中央が原点．|
-|\#7|`relative_pos`|number| ぼかし処理の基準位置，`0` で両端から伸びるように，`1.0` や `-1.0` で片側から伸びるようにぼかしがかかる．範囲は `-1.0` から `1.0`.|
-|\#8|`quality`|integer| 1ピクセルを計算するのに利用されるピクセル数．最小は `2`.|
-|\#9|`keep_size`|boolean| サイズ固定をするかどうかを指定．|
-|\#10|`reload`|boolean\|nil| GLShaderKit に対してシェーダーファイルの再読み込みを促す．デバッグ用．省略時は `false` と同等．|
+|引数 \#1|`radial_rate`|number|拡大率，正数で指定，等倍は `1.0`. 放射ブラーに対応する部分．|
+|引数 \#2|`rotate_rad`|number|回転角，ラジアン単位，時計回りに正．回転ブラーに対応する部分．|
+|引数 \#3|`direction_x`|number|X 座標の移動量，ピクセル単位，正で右方向．方向ブラーに対応する部分．|
+|引数 \#4|`direction_y`|number|Y 座標の移動量，ピクセル単位，正で下方向．方向ブラーに対応する部分．|
+|引数 \#5|`center_x`|number|拡大や回転の中心の X 座標，ピクセル単位，画像の中央が原点，右に正．|
+|引数 \#6|`center_y`|number|拡大や回転の中心の Y 座標，ピクセル単位，画像の中央が原点，下に正．|
+|引数 \#7|`relative_pos`|number|ぼかし処理の基準位置，`0` で両端から伸びるように，`1.0` や `-1.0` で片側から伸びるようにぼかしがかかる．範囲は `-1.0` から `1.0`.|
+|引数 \#8|`quality`|integer|1 ピクセルを計算するのに利用されるピクセル数．最小は `2`.|
+|引数 \#9|`keep_size`|boolean|サイズ固定をするかどうかを指定．固定しない場合，基本的には最低でも上下左右 1 ピクセルずつ拡大する．|
+|引数 \#10|`reload`|boolean\|nil|GLShaderKit に対してシェーダーファイルの再読み込みを促す．デバッグ用．省略時は `false` と同等．|
+|戻り値|||なし|
+
+このブラー効果のメインとなる関数です．
+
+```lua
+RadRotDirBlur_S.RadRotDirBlur_S(radial_rate, rotate_rad, direction_x, direction_y, center_x, center_y, relative_pos, quality, keep_size, reload);
+```
+
+### `.rad_rot_dir_blur()` 関数
+
+拡大率・回転角・座標位置の移動元・移動先を指定し，その変化に沿ったブラーを適用する．[`RadRotDirBlur_S()`](#radrotdirblur_s-関数) の中核関数で，引数の範囲チェックや画像サイズの領域拡張などは行わない．
+
+|引数・戻り値|名前|型|説明|
+|---:|:---:|:---:|:---|
+|引数 \#1|`scale1`|number|移動元の拡大率，正数で指定，等倍は `1.0`.|
+|引数 \#2|`rotate1`|number|移動元の回転角，ラジアン単位，時計回りに正．|
+|引数 \#3|`move_x1`|number|移動元の X 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#4|`move_y1`|number|移動元の Y 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#5|`scale2`|number|移動先の拡大率，正数で指定，等倍は `1.0`.|
+|引数 \#6|`rotate2`|number|移動先の回転角，ラジアン単位，時計回りに正．|
+|引数 \#7|`move_x2`|number|移動先の X 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#8|`move_y2`|number|移動先の Y 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#9|`center_x`|number|拡大や回転の中心の X 座標，ピクセル単位，画像の中央が原点，右に正．|
+|引数 \#10|`center_y`|number|拡大や回転の中心の Y 座標，ピクセル単位，画像の中央が原点，下に正．|
+|引数 \#11|`quality`|integer|1 ピクセルを計算するのに利用されるピクセル数．最小は `2`.|
+|引数 \#12|`reload`|boolean\|nil|GLShaderKit に対してシェーダーファイルの再読み込みを促す．デバッグ用．省略時は `false` と同等．|
+|戻り値|||なし|
+
+このブラー効果の中核となる関数です．[`.RadRotDirBlur_S()` 関数](#radrotdirblur_s-関数)から間接的に呼び出されます．直接呼び出すほうがパラメタの自由度が広く，理論上はできることが多いです．
+
+```lua
+RadRotDirBlur_S.rad_rot_dir_blur(scale1, rotate1, move_x1, move_y1, scale2, rotate2, move_x2, move_y2, center_x, center_y, quality, reload);
+```
+
+### `.calc_extra_size()` 関数
+
+拡大率・回転角・座標位置の移動元・移動先を指定し，その変化に沿ったブラーを適用する場合での，必要な画像拡大幅を計算する．この関数では実際には領域拡張は行わないし，最大画像サイズは考慮しない．[`RadRotDirBlur_S()`](#radrotdirblur_s-関数) 内で `keep_size` が `true` の場合に利用される．
+
+|引数・戻り値|名前|型|説明|
+|---:|:---:|:---:|:---|
+|引数 \#1|`width`|integer|現在の画像の横幅，ピクセル単位．|
+|引数 \#2|`height`|integer|現在の画像の縦の高さ，ピクセル単位．|
+|引数 \#3|`scale1`|number|移動元の拡大率，正数で指定，等倍は `1.0`.|
+|引数 \#4|`rotate1`|number|移動元の回転角，ラジアン単位，時計回りに正．|
+|引数 \#5|`move_x1`|number|移動元の X 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#6|`move_y1`|number|移動元の Y 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#7|`scale2`|number|移動先の拡大率，正数で指定，等倍は `1.0`.|
+|引数 \#8|`rotate2`|number|移動先の回転角，ラジアン単位，時計回りに正．|
+|引数 \#9|`move_x2`|number|移動先の X 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#10|`move_y2`|number|移動先の Y 座標の移動量，ピクセル単位，正で右方向．|
+|引数 \#11|`center_x`|number|拡大や回転の中心の X 座標，ピクセル単位，画像の中央が原点，右に正．|
+|引数 \#12|`center_y`|number|拡大や回転の中心の Y 座標，ピクセル単位，画像の中央が原点，下に正．|
+|戻り値 \#1|`left`|integer|左方向の必要拡大量，0 以上の整数でピクセル単位．|
+|戻り値 \#2|`top`|integer|上方向の必要拡大量，0 以上の整数でピクセル単位．|
+|戻り値 \#3|`right`|integer|右方向の必要拡大量，0 以上の整数でピクセル単位．|
+|戻り値 \#4|`bottom`|integer|下方向の必要拡大量，0 以上の整数でピクセル単位．|
+
+必要サイズの事前計算に利用できます．戻り値はそのまま `obj.effect("領域拡張",...)` のパラメタとして渡せます．
+
+```lua
+local left, top, right, bottom = RadRotDirBlur_S.calc_extra_size(width, height, scale1, rotate1, move_x1, move_y1, scale2, rotate2, move_x2, move_y2, center_x, center_y);
+obj.effect("領域拡張","上", top, "下", bottom, "左", left, "右", right);
+```
 
 
 ##  TIPS
@@ -147,7 +214,7 @@ RadRotDirBlur_S.RadRotDirBlur_S(radial_rate, rotate_rad, direction_x, direction_
 
     ```lua
     --
-    -- VERSION: v1.01
+    -- VERSION: v1.10
     --
     ```
 
@@ -171,6 +238,12 @@ $$
 
 
 ## 改版履歴
+
+- **v1.10** (2025-04-15)
+
+  - 外部スクリプト用 API を 2 つ追加で開放．
+
+  - コード整理．
 
 - **v1.01** (2025-04-14)
 

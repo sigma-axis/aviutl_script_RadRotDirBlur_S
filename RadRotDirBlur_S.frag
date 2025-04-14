@@ -24,7 +24,7 @@ https://mit-license.org/
 */
 
 //
-// VERSION: v1.01
+// VERSION: v1.10
 //
 
 ////////////////////////////////
@@ -56,8 +56,10 @@ void main()
 		color += c;
 	}
 
-	if (color.a > 0) color.rgb /= color.a;
-	color.a /= count + 1;
+	if (color.a > 0) {
+		color.rgb /= color.a;
+		color.a /= count + 1;
+	}
 
     FragColor = color;
 }
