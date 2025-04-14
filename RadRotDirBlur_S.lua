@@ -25,7 +25,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.00
+-- VERSION: v1.01
 --
 
 --------------------------------
@@ -68,11 +68,8 @@ local shader_path = script_path().."RadRotDirBlur_S.frag";
 local function union_rect(l, t, r, b, L, T, R, B)
 	return math.min(l, L), math.min(t, T), math.max(r, R), math.max(b, B);
 end
-local function arc_bound_core(x, y, a, a2, ...)
-	if a2 then
-		local l, t, r, b = arc_bound_core(x, y, a);
-		return union_rect(l, t, r, b, arc_bound_core(x, y, a2, ...));
-	elseif x < 0 then
+local function arc_bound_core(x, y, a)
+	if x < 0 then
 		local l, t, r, b = arc_bound_core(-x, y, -a);
 		return -r, t, -l, b;
 	elseif y < 0 then
@@ -82,7 +79,7 @@ local function arc_bound_core(x, y, a, a2, ...)
 		local t, l, b, r = arc_bound_core(y, x, -a)
 		return l, t, r, b;
 	end
-	local A, R = a + math.atan(y / x), (x ^ 2 + y ^ 2) ^ 0.5;
+	local A, R = a + math.atan2(y, x), (x ^ 2 + y ^ 2) ^ 0.5;
 	local l, t, r, b = -R, -R, R, R;
 	if A < 0.5 * math.pi then b = R * math.sin(A) end
 	if A < 1.0 * math.pi then l = R * math.cos(A) end
@@ -90,16 +87,46 @@ local function arc_bound_core(x, y, a, a2, ...)
 	if A < 2.0 * math.pi then r = R * math.cos(A) end
 	return l, t, r, b;
 end
-local function arc_bound(left, top, right, bottom, ...)
-	local l, t, r, b = union_rect(
-		left, top, right, bottom, arc_bound_core(left, top, ...));
-	l, t, r, b = union_rect(l, t, r, b, arc_bound_core(right, top, ...));
-	l, t, r, b = union_rect(l, t, r, b, arc_bound_core(right, bottom, ...));
-	return union_rect(l, t, r, b, arc_bound_core(left, bottom, ...));
+local function arc_bound(left, top, right, bottom, a, a2, ...)
+	if a2 then
+		local l, t, r, b = arc_bound(left, top, right, bottom, a);
+		return union_rect(l, t, r, b, arc_bound(left, top, right, bottom, a2, ...));
+	end
+	local l, t, r, b = arc_bound_core(left, top, a);
+	l, t, r, b = union_rect(l, t, r, b, arc_bound_core(right, top, a));
+	l, t, r, b = union_rect(l, t, r, b, arc_bound_core(right, bottom, a));
+	return union_rect(l, t, r, b, arc_bound_core(left, bottom, a));
+end
+
+local function calc_extra_size(w, h, radial_rate, rotate_rad, direction_x, direction_y, center_x, center_y, relative_pos)
+	-- find the final bounding box.
+	local l, t, r, b = -w / 2 - center_x, -h / 2 - center_y, w / 2 - center_x, h / 2 - center_y;
+	local rel_st, rel_ed = (relative_pos - 1) / 2, (relative_pos + 1) / 2;
+
+	-- possible inflation by rotation.
+	l, t, r, b = union_rect(l, t, r, b,
+		arc_bound(l, t, r, b, rel_st * rotate_rad, rel_ed * rotate_rad));
+
+	-- possible inflation by scaling.
+	local s = math.max(radial_rate ^ rel_st, radial_rate ^ rel_ed);
+	l, t, r, b = union_rect(l, t, r, b, s * l, s * t, s * r, s * b);
+
+	-- possible inflation by movement.
+	l = l + math.min(rel_st * direction_x, rel_ed * direction_x);
+	t = t + math.min(rel_st * direction_y, rel_ed * direction_y);
+	r = r + math.max(rel_st * direction_x, rel_ed * direction_x);
+	b = b + math.max(rel_st * direction_y, rel_ed * direction_y);
+
+	-- calculate and return the extra size required.
+	return
+		math.ceil(math.max(0, -l - center_x - w / 2)),
+		math.ceil(math.max(0, -t - center_y - h / 2)),
+		math.ceil(math.max(0, r + center_x - w / 2)),
+		math.ceil(math.max(0, b + center_y - h / 2));
 end
 
 ---放射・回転・方向の複合ブラーを適用．
----@param radial_rate number 拡大率，等倍は `1.0`. 放射ブラーに対応する部分．
+---@param radial_rate number 拡大率，正数で指定，等倍は `1.0`. 放射ブラーに対応する部分．
 ---@param rotate_rad number 回転角，ラジアン単位．回転ブラーに対応する部分．
 ---@param direction_x number X 座標の移動量，ピクセル単位．方向ブラーに対応する部分．
 ---@param direction_y number Y 座標の移動量，ピクセル単位．方向ブラーに対応する部分．
@@ -113,30 +140,29 @@ local function RadRotDirBlur_S(radial_rate, rotate_rad, direction_x, direction_y
 	-- ignore trivial cases.
 	if radial_rate == 1 and rotate_rad == 0 and direction_x == 0 and direction_y == 0 then return end
 
-	local rel_st, rel_ed = (relative_pos - 1) / 2, (relative_pos + 1) / 2;
-
 	-- expand the canvas unless specified.
 	if not keep_size then
-		-- find the final bounding box.
 		local w, h = obj.getpixel();
-		local l, t, r, b = -w / 2 - center_x, -h / 2 - center_y, w / 2 - center_x, h / 2 - center_y;
+		local l, t, r, b = calc_extra_size(w, h, radial_rate, rotate_rad,
+			direction_x, direction_y, center_x, center_y, relative_pos);
+		l, t, r, b = math.max(1, l), math.max(1, t), math.max(1, r), math.max(1, b);
 
-		-- possible inflation by rotation.
-		l, t, r, b = arc_bound(l, t, r, b, rel_st * rotate_rad, rel_ed * rotate_rad);
+		-- cap to the maximum size of images.
+		local max_w, max_h = obj.getinfo("image_max");
+		if l + r + w > max_w then
+			local diff = (l + r + w - max_w) / 2;
+			l, r = l - math.ceil(diff), r - math.floor(diff);
+			if l < 0 then l, r = 0, r + l end
+			if r < 0 then l, r = l + r, 0 end
+		end
+		if t + b + h > max_h then
+			local diff = (t + b + h - max_h) / 2;
+			t, b = t - math.ceil(diff), b - math.floor(diff);
+			if t < 0 then t, b = 0, b + t end
+			if b < 0 then t, b = t + b, 0 end
+		end
 
-		-- possible inflation by scaling.
-		local s = math.max(radial_rate ^ rel_st, radial_rate ^ rel_ed);
-		l, t, r, b = union_rect(l, t, r, b, s * l, s * t, s * r, s * b);
-
-		-- possible inflation by movement.
-		l = l + math.min(rel_st * direction_x, rel_ed * direction_x);
-		t = t + math.min(rel_st * direction_y, rel_ed * direction_y);
-		r = r + math.max(rel_st * direction_x, rel_ed * direction_x);
-		b = b + math.max(rel_st * direction_y, rel_ed * direction_y);
-
-		-- reposition the center and expand the canvas.
-		l, t, r, b = l + center_x, t + center_y, r + center_x, b + center_y;
-		l, t, r, b = math.max(0, -l - w / 2), math.max(0, -t - h / 2), math.max(0, r - w / 2), math.max(0, b - h / 2);
+		-- expand the canvas and reposition the center.
 		obj.effect("領域拡張", "上", t, "下", b, "左", l, "右", r);
 		center_x, center_y = center_x + (l - r) / 2, center_y + (t - b) / 2;
 	end
