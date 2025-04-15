@@ -177,7 +177,7 @@ RadRotDirBlur_S.rad_rot_dir_blur(scale1, rotate1, move_x1, move_y1, scale2, rota
 
 ### `.calc_extra_size()` 関数
 
-拡大率・回転角・座標位置の移動元・移動先を指定し，その変化に沿ったブラーを適用する場合での，必要な画像拡大幅を計算する．この関数では実際には領域拡張は行わないし，最大画像サイズは考慮しない．[`RadRotDirBlur_S()`](#radrotdirblur_s-関数) 内で `keep_size` が `true` の場合に利用される．
+拡大率・回転角・座標位置の移動元・移動先を指定し，その変化に沿ったブラーを適用する場合での，必要な画像拡大幅を計算する．この関数では実際には領域拡張は行わないし，最大画像サイズは考慮しない．[`RadRotDirBlur_S()`](#radrotdirblur_s-関数) 内で `keep_size` が `false` の場合に利用される．
 
 |引数・戻り値|名前|型|説明|
 |---:|:---:|:---:|:---|

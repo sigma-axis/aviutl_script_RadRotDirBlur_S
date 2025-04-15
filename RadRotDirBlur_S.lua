@@ -25,7 +25,7 @@ https://mit-license.org/
 ]]
 
 --
--- VERSION: v1.10
+-- VERSION: v1.11-beta1
 --
 
 --------------------------------
@@ -104,7 +104,7 @@ end
 ---拡大率・回転角・座標位置の移動元・移動先を指定し，
 ---その変化に沿ったブラーを適用する場合での，必要な画像拡大幅を計算する．
 ---この関数では実際には領域拡張は行わないし，最大画像サイズは考慮しない．
----`RadRotDirBlur_S()` 内で `keep_size` が `true` の場合に利用される．
+---`RadRotDirBlur_S()` 内で `keep_size` が `false` の場合に利用される．
 ---@param width integer 現在の画像の横幅，ピクセル単位．
 ---@param height integer 現在の画像の縦の高さ，ピクセル単位．
 ---@param scale1 number 移動元の拡大率，正数で指定，等倍は `1.0`.
